@@ -1,10 +1,12 @@
-#패스트캠퍼스 김민태의 프론트엔드 아카데미 제 1강
+# 패스트캠퍼스 김민태의 프론트엔드 아카데미 제 1강
 
 ## 221013
 
 **해커 뉴스 클라이언트 앱**
 
 [HNPWA API](https://github.com/tastejs/hacker-news-pwas/blob/master/docs/api.md)을 활용하여서 사이트를 만들었다.
+
+console 창에 계속해서 오류 창이 떠서 검색해 본 결과, 해결 방법이 github에 적혀 있었다. [parcel github](https://github.com/parcel-bundler/parcel/issues/1401) 으로 들어가면 볼 수 있다. 어떤 버전에서 오류가 일어나는지, 어떤 문구가 뜨는지. 해결 방안은 간단했다. `script` 태그에서 `type="module"`만 지우면 됐다.
 
 처음엔 `new XMLHttpRequest();`를 통해서 서버와 상호작용하는 URL을 가지고 올 수 있게 했다.
 ```javascript
