@@ -123,29 +123,37 @@ var ajax = new XMLHttpRequest();
 var content = document.createElement('div');
 var NEWS_URL = 'https://api.hnpwa.com/v0/news/1.json';
 var CONTENT_URL = 'https://api.hnpwa.com/v0/item/@id.json';
-ajax.open('GET', NEWS_URL, false);
-ajax.send();
-var newsFeed = JSON.parse(ajax.response);
-var ul = document.createElement('ul');
-window.addEventListener('hashchange', function () {
-  var id = location.hash.slice(1);
-  ajax.open('GET', CONTENT_URL.replace('@id', id), false);
+function getData(url) {
+  ajax.open('GET', url, false);
   ajax.send();
-  var newsContent = JSON.parse(ajax.response);
-  var title = document.createElement('h1');
-  title.innerHTML = newsContent.title;
-  content.appendChild(title);
-});
-for (var i = 0; i < 10; i += 1) {
-  var li = document.createElement('li');
-  var a = document.createElement('a');
-  a.href = "#".concat(newsFeed[i].id);
-  a.innerHTML = "".concat(newsFeed[i].title, " (").concat(newsFeed[i].comments_count, ")");
-  li.appendChild(a);
-  ul.appendChild(li);
+  return JSON.parse(ajax.response);
 }
-container.appendChild(content);
-container.appendChild(ul);
+;
+function newsFeed() {
+  var newsFeed = getData(NEWS_URL);
+  var newsList = [];
+  newsList.push('<ul>');
+  for (var i = 0; i < 10; i += 1) {
+    newsList.push("\n  <li>\n    <a href=\"#".concat(newsFeed[i].id, "\">\n    ").concat(newsFeed[i].title, " (").concat(newsFeed[i].comments_count, ")</a>\n  </li>\n  "));
+  }
+  newsList.push('</ul>');
+  container.innerHTML = newsList.join('');
+}
+function newsDetail() {
+  var id = location.hash.slice(1);
+  var newsContent = getData(CONTENT_URL.replace('@id', id));
+  container.innerHTML = "\n    <h1>".concat(newsContent.title, "</h1>\n    <div>\n      <a href=\"#\">\uBAA9\uB85D\uC73C\uB85C</a>\n    </div>\n    ");
+}
+function router() {
+  var routePath = location.hash;
+  if (routePath === '') {
+    newsFeed();
+  } else {
+    newsDetail();
+  }
+}
+window.addEventListener('hashchange', router);
+router();
 },{}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
@@ -171,7 +179,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "3005" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "52137" + '/');
   ws.onmessage = function (event) {
     checkedAssets = {};
     assetsToAccept = [];
