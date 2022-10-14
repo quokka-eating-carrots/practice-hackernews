@@ -38,6 +38,8 @@ for(let i = 0; i < 10; i += 1) {
 ```
 강사님은 `slice()` 대신에 `substr()`이라는 메소드를 썼는데 그건 이제 사용되지 않는다고 하여서 `slice()`를 사용했다.
 
+---
+
 ## 221014
 
 어제 작성했던 for문 안에 HTML 구조들을 `.innerHTML` 속성을 사용해서 조금 더 직관적인 코드로 만들어 주었습니다.
@@ -117,3 +119,80 @@ router();
 ```
 
 `addEventListener` 부분에 router을 넣어서 hash가 빈값이면 목록을 그게 아니라면 콘텐츠를 보여 주게 만들어 주었다. `router`는 함수이기 때문에 마지막에 호출까지 해 주었다.
+
+---
+
+이제 뉴스 목록 페이징을 해 줍니다.
+```javascript
+const store = {
+  currentPage: 1,
+};
+
+newsList.push(`
+  <div>
+    <a href="#/page/${store.currentPage - 1}">이전 페이지</a>
+    <a href="#/page/${store.currentPage + 1}">다음 페이지</a>
+  </div>
+`);
+```
+기존 `ul` 태그 아래에 이전 페이지, 다음 페이지로 넘어갈 수 있는 코드를 작성합니다. 페이징이 될 수 있게 주소도 `#/page/`로 변경해 주었습니다.
+
+```javascript
+function router() {
+  const routePath = location.hash;
+
+  if (routePath === '') {
+    newsFeed();
+  } else if (routePath.indexOf('#/page/') >= 0) {
+    store.currentPage = 2;
+    newsFeed();
+  } else {
+    newsDetail();
+  }
+}
+```
+라우터에는 `hash`값이 없을 때, page 값이 있을 때, 그게 아니라면 뉴스 콘텐츠를 보여 주는 페이지로 나뉠 수 있고 `routePath.indexOf` 를 사용하여서 주소값에 `#/page/`가 있는지 찾아 주어 해당 페이지로 이동할 수 있게 합니다. ~~현재 코드는 페이지 2번으로만 넘어가게 하드 코딩 해 둔 상태~~
+
+```javascript
+for(let i = (store.currentPage - 1) * 10; i < store.currentPage * 10; i += 1) {
+  newsList.push(`
+  <li>
+    <a href="#/show/${newsFeed[i].id}">
+    ${newsFeed[i].title} (${newsFeed[i].comments_count})</a>
+  </li>
+  `);
+}
+```
+
+그리고 페이지를 넘기면 목록이 바뀌어야 하니까 i 변수도 바꾸어 줘야 합니다. 페이지마다 글 목록은 10개이기 때문에 10을 곱하여 줍니다.
+
+```javascript
+store.currentPage = Number(routePath.slice(7));
+```
+slice가 인수로 7을 받는 이유는 `#/page/` 때문입니다. `Number`로 받아 주지 않으면 페이지가 1 2 21 31 이렇게 넘어가기 때문에 꼭 숫자로 받아 주어야 합니다.
+
+```javascript
+function newsDetail() {
+  const id = location.hash.slice(7);
+  const newsContent = getData(CONTENT_URL.replace('@id', id))
+
+  container.innerHTML = `
+    <h1>${newsContent.title}</h1>
+    <div>
+      <a href="#/page/${store.currentPage}">목록으로</a>
+    </div>
+    `;
+}
+```
+현재 페이지 주소는 `#/page/`가 더 붙었기 때문에 `id` 부분 `hash.slice`도 수정을 해 주었습니다. 페이지 주소도 바뀌었기 때문에 콘텐츠를 보고 나서 다시 목록으로 돌아갈 때도 바른 페이지로 돌아가기 위해 `${store.currentPage}`를 추가해 줍니다.
+
+```javascript
+`<a href="#/page/${store.currentPage > 1 ? store.currentPage - 1 : 1}">이전 페이지</a>`
+```
+1 페이지에서 이전 페이지를 누르게 되면 page 숫자가 0이 되는데 그걸 방어하기 위해서 삼항연산자를 사용해 줍니다. page 수가 1보다 클 때는 숫자에 -1를 해 주고 그게 아니라면 그냥 1이라는 값을 반환하게 됩니다.
+
+```javascript
+`<a href="#/page/${store.currentPage < 3 ? store.currentPage + 1 : 3}">다음 페이지</a>`
+```
+
+강사님이 다음 페이지 방어 코드를 과제처럼 내 주셨는데 현재 News API json 파일에는 총 30개의 배열이 있어서 4 페이지부터는 로드가 되지 않는 걸 볼 수 있습니다. 그래서 3 페이지가 최종 페이지라고 생각하고 숫자가 3보다 작을 때는 + 1를, 아닐 때는 3으로 해 주는 방어 코드를 작성하였습니다.
