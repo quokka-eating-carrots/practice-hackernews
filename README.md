@@ -196,3 +196,130 @@ function newsDetail() {
 ```
 
 강사님이 다음 페이지 방어 코드를 과제처럼 내 주셨는데 현재 News API json 파일에는 총 30개의 배열이 있어서 4 페이지부터는 로드가 되지 않는 걸 볼 수 있습니다. 그래서 3 페이지가 최종 페이지라고 생각하고 숫자가 3보다 작을 때는 + 1를, 아닐 때는 3으로 해 주는 방어 코드를 작성하였습니다.
+
+---
+
+## 221016
+
+기존에 있던 방식을 다시 간단하게 하기 위해서 `template` 변수를 만들어 줍니다.
+```javascript
+  let template = `
+  <div>
+    <h1>Hacker News</h1>
+    <ul>
+      {{__news_feed__}}
+    </ul>
+    <div>
+      <a href="#/page/{{__prev_page__}}">이전 페이지</a>
+      <a href="#/page/{{__next_page__}}">다음 페이지</a>
+    </div>
+  </div>
+  `;
+```
+```javascript
+template = template.replace('{{__news_feed__}}', newsList.join(''));
+template = template.replace('{{__prev_page__}}', store.currentPage > 1 ? store.currentPage - 1 : 1);
+template = template.replace('{{__next_page__}}', store.currentPage < 3 ? store.currentPage + 1 : 3);
+```
+
+그러고 난 뒤 `innerHTML`을 사용하여 `template`을 넣어 줍니다.
+
+```javascript
+container.innerHTML = template;
+```
+
+`tailwindcss` 잠깐 사용하기. 예전에 유튜브를 보다가 접한 적이 있는 라이브러리(?) 입니다. [tailwindcss](https://tailwindcss.com/)를 접속하면 사용 방법이 나와 있습니다. 강의에서 사용한 것은 `margin`과 `padding` 값을 주는 것만 사용하였습니다.
+
+`tailwind`와 [font-awesome](https://fontawesome.com/)을 통해서 ui를 변경해 주었습니다. `fa`는 `font-awesome`에서 제공하는 class명이므로 변경하고 싶은 사항이 있다면 홈페이지를 통해서 참고하면 됩니다.
+
+---
+
+댓글에는 기존 댓글과 대댓글이 존재함으로 for문을 통해서 기존의 댓글들을 나열해 줍니다.
+```javascript
+function makeComment(comments) {
+  const commentString = [];
+
+  for(let i = 0; i < comments.length; i += 1) {
+    commentString.push(`
+      <div style="padding-left: 40px;" class="mt-4">
+          <div class="text-gray-400">
+            <i class="fa fa-sort-up mr-2"></i>
+            <strong>${comments[i].user}</strong> ${comments[i].time_ago}
+          </div>
+          <p class="text-gray-700">${comments[i].content}</p>
+        </div> 
+    `)
+  }
+  
+  return commentString.join('');
+}
+
+container.innerHTML = template.replace('{{__comments__}}', makeComment(newsContent.comments));
+```
+
+그 후 대댓글들을 위한 if함수를 넣어 줍니다. 대댓글이 있을 수도 있고, 없을 수도 있기 때문입니다.
+```javascript
+if(comments[i].comments.length > 0) {
+  commentString.push(makeComment(comments[i].comments))
+}
+```
+
+이렇게 설정한 후 ui를 보게 되면 그냥 댓글과 대댓글의 구분이 가지 않을 겁니다.  그때 기존 `makeComment` 함수에 `called`라는 매개변수를 넣어 기본값을 0을 주고, 대댓글 매개변수에 `called + 1`를 추가하여 대댓글의 개수만큼 추가되게 합니다.
+
+그 후 `tailwind` 값을 변경해 줍니다.
+```javascript
+function makeComment(comments, called = 0) {
+    const commentString = [];
+
+    for(let i = 0; i < comments.length; i += 1) {
+      commentString.push(`
+        <div style="padding-left: ${called * 40}px;" class="mt-4">
+          <div class="text-gray-400">
+            <i class="fa fa-sort-up mr-2"></i>
+            <strong>${comments[i].user}</strong> ${comments[i].time_ago}
+          </div>
+          <p class="text-gray-700">${comments[i].content}</p>
+        </div>      
+      `);
+
+      if(comments[i].comments.length > 0) {
+        commentString.push(makeComment(comments[i].comments, called + 1))
+      }
+    }
+
+    return commentString.join('');
+  }
+
+  container.innerHTML = template.replace('{{__comments__}}', makeComment(newsContent.comments));
+```
+
+---
+이번엔 글을 읽었는지 안 읽었는지에 대한 코드를 작성해 봅시다. 우선 상태에 기본값에 대해서 알 수 있게 기존에 작성했었던 최근 페이지가 담긴 변수인 `store` 변수 안에 `feeds: []`라는 배열을 하나 넣습니다. 
+
+그리고 새로운 함수를 하나 작성합니다.
+```javascript
+function makeFeeds(feeds) {
+  for (let i = 0; i < feeds.length; i += 1) {
+    feeds[i].read = false;
+  }
+
+  return feeds;
+}
+```
+feed를 불러올 때 기본적으로 읽지 않은 상태로 만들어 주는 함수입니다.
+기존에 작성했떤 `newsFeed` 함수에 URL을 부르는 변수를 수정해 줍니다.
+```javascript
+// 기존 함수
+const newsFeed = getData(NEWS_URL)
+
+// 변경 함수
+let newsFeed = store.feeds;
+```
+
+이렇게 되면 기존에 API를 불러 와 주는 URL이 삭제된 것을 볼 수 있습니다. 만들어 두었던 `template` 아래에 새로운 if문을 작성해 줍니다.
+```javascript
+ if(newsFeed.length === 0) {
+    newsFeed = store.feeds = makeFeeds(getData(NEWS_URL));
+  }
+```
+이렇게 되면 계속해서 URL을 불러올 수 있게 됩니다.
