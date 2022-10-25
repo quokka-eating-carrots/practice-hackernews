@@ -4,7 +4,8 @@
   "main": "index.js",
   "devDependencies": {
     "colors": "^1.4.0",
-    "parcel-bundler": "^1.12.5"
+    "parcel-bundler": "^1.12.5",
+    "typescript": "^4.8.4"
   },
   "scripts": {
     "dev": "parcel index.html",
