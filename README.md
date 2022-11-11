@@ -323,3 +323,74 @@ let newsFeed = store.feeds;
   }
 ```
 이렇게 되면 계속해서 URL을 불러올 수 있게 됩니다.
+
+---
+JSON API 파일 VSCODE에서 보는 법
+확장 프로그램으로 `REST client`를 받아 줍니다.
+```http
+GET [URL] HTTP/1.1
+```
+위와 같이 작성하면 상단에 `Send Request` 라는 버튼이 뜹니다. 해당 버튼을 클릭하면 api 자료를 VSCODE에서 확인할 수 있습니다.
+
+JavaScript를 TypeScript로 변환
+
+Type Alias
+```typescript
+type Store = {
+  currentPage: number;
+  feeds: NewsFeed[];
+}
+
+type NewsFeed = News & {
+  comments_count: number;
+  points: number;
+  read?: boolean;
+}
+```
+
+interface typing
+```typescript
+interface Store {
+  currentPage: number;
+  feeds: NewsFeed[];
+}
+
+interface NewsFeed extends News {
+  comments_count: number;
+  points: number;
+  read?: boolean;
+}
+```
+
+class는 최초의 초기화되는 과정이 필요하고, 초기화 과정을 처리하는 함수 = 생성자`constructor`가 필요하다.
+class 내부 속성으로 타입을 가지고 있으면 내부에서 쓸 수 있게 된다.
+
+class extends는 다중 상속을 지원하지 않는다.
+
+```typescript
+function applyApiMixins(targetClass: any, baseClass: any): void {
+  baseClass.forEach(baseClass => {
+    Object.getOwnPropertyNames(baseClass.protorype).forEach(name => {
+      const descriptor = Object.getOwnPropertyDescriptor(baseClass.prototype, name);
+
+      if (descriptor) {
+        Object.defineProperty(targetClass.prototype, name, descriptor);
+      }
+    })
+  })
+}
+```
+TypeScript 공식 사이트에도 나와 있는 mixin 코드라고 한다. 기본적인 코드 작성을 소개한 부분인 것 같은데 현재 프로젝트에서는 `Api`를 배열로 받고 있기 때문에 아래 코드처럼 복수 형태로 바꾸어 준다.
+```typescript
+function applyApiMixins(targetClass: any, baseClasses: any[]): void {
+  baseClasses.forEach(baseClass => {
+    Object.getOwnPropertyNames(baseClass.protorype).forEach(name => {
+      const descriptor = Object.getOwnPropertyDescriptor(baseClass.prototype, name);
+
+      if (descriptor) {
+        Object.defineProperty(targetClass.prototype, name, descriptor);
+      }
+    })
+  })
+}
+```
